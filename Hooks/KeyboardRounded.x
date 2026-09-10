@@ -2,38 +2,56 @@
 
 #pragma mark - Settings
 
-// Độ bo của TẤT CẢ phím
+// Radius mong muốn cho tất cả key
 static CGFloat KRKeyRadius(void) {
     return 12.0;
 }
 
-// Độ bo của nền keyboard
+// Radius của nền ngoài keyboard
 static CGFloat KRKeyboardRadius(void) {
     return 28.0;
 }
 
-#pragma mark - Keyboard Key Geometry
+#pragma mark - Keyboard Render Factories
 
-@interface UIKBRenderGeometry : NSObject
-@property(nonatomic) CGFloat roundRectRadius;
+@interface UIKBRenderFactory10Key_Round : NSObject
+- (double)keyCornerRadius;
+@end
+
+@interface UIKBRenderFactory_Monolith : NSObject
+- (double)keyRoundRectRadius;
 @end
 
 /*
- * Quan trọng:
- * Hook trực tiếp setter của geometry.
+ * Đây là phần quan trọng nhất.
  *
- * Không hook UIKBRenderer nữa.
- * Vì WERTY/UIO... có thể sử dụng geometry riêng,
- * nên thay đổi ở đây sẽ áp dụng cho từng geometry.
+ * WERTY / ASDF... / ZXCV... được tạo bởi keyboard
+ * render factory. Override keyCornerRadius để đưa
+ * radius về cùng một giá trị với Q/P/A/L.
  */
 
-%hook UIKBRenderGeometry
+%hook UIKBRenderFactory10Key_Round
 
-- (void)setRoundRectRadius:(CGFloat)radius {
-    %orig(KRKeyRadius());
+- (double)keyCornerRadius {
+    return KRKeyRadius();
 }
 
 %end
+
+
+/*
+ * Một số keyplane/layout khác sử dụng
+ * keyRoundRectRadius thay vì keyCornerRadius.
+ */
+
+%hook UIKBRenderFactory_Monolith
+
+- (double)keyRoundRectRadius {
+    return KRKeyRadius();
+}
+
+%end
+
 
 #pragma mark - Keyboard Background
 
@@ -43,7 +61,8 @@ static CGFloat KRKeyboardRadius(void) {
 @interface UIKBVisualEffectView : UIView
 @end
 
-static void KRApplyBackgroundRadius(UIView *view) {
+static void KRApplyKeyboardBackgroundRadius(UIView *view) {
+
     if (!view)
         return;
 
@@ -56,26 +75,28 @@ static void KRApplyBackgroundRadius(UIView *view) {
     layer.masksToBounds = YES;
 }
 
-#pragma mark - UIKBBackdropView
+#pragma mark - Backdrop
 
 %hook UIKBBackdropView
 
 - (void)layoutSubviews {
+
     %orig;
 
-    KRApplyBackgroundRadius(self);
+    KRApplyKeyboardBackgroundRadius(self);
 }
 
 %end
 
-#pragma mark - UIKBVisualEffectView
+#pragma mark - Visual Effect
 
 %hook UIKBVisualEffectView
 
 - (void)layoutSubviews {
+
     %orig;
 
-    KRApplyBackgroundRadius(self);
+    KRApplyKeyboardBackgroundRadius(self);
 }
 
 %end
