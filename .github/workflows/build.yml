@@ -5,21 +5,26 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Theos
-        uses: theos/theos-action@main
+      - name: Setup Theos
+        uses: waruhachi/theos-action@v2.4.10
+        with:
+          theos-src: 'theos/theos'
+          theos-branch: 'master'
+          sdks-src: 'theos/sdks'
+          sdks-branch: 'master'
 
-      - name: Build package
+      - name: Build RootHide package
         run: |
-          make clean package FINALPACKAGE=1
+          make clean package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=roothide
 
       - name: Upload DEB
         uses: actions/upload-artifact@v4
         with:
-          name: KeyboardRounded-deb
+          name: KeyboardRounded-roothide
           path: packages/*.deb
