@@ -1,4 +1,4 @@
-name: Build KeyboardRounded RootHide
+name: Build KeyboardRounded
 
 on:
   workflow_dispatch:
@@ -19,12 +19,12 @@ jobs:
           sdks-src: 'theos/sdks'
           sdks-branch: 'master'
 
-      - name: Build RootHide package
+      - name: Build package
         run: |
-          make clean package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=roothide
+          make clean package FINALPACKAGE=1
 
       - name: Upload DEB
         uses: actions/upload-artifact@v4
         with:
-          name: KeyboardRounded-roothide
+          name: KeyboardRounded-deb
           path: packages/*.deb
