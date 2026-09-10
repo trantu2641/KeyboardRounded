@@ -1,0 +1,9 @@
+Package: com.tutu.keyboardrounded
+Name: Keyboard Rounded
+Version: 1.0.0
+Architecture: iphoneos-arm64e
+Description: Simple iOS keyboard key corner rounding tweak.
+Maintainer: Tú Tú
+Author: Tú Tú
+Section: Tweaks
+Depends: mobilesubstrate
