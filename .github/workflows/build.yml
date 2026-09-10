@@ -1,4 +1,4 @@
-name: Build KeyboardRounded
+name: Build KeyboardRounded RootHide
 
 on:
   workflow_dispatch:
@@ -14,17 +14,24 @@ jobs:
       - name: Setup Theos
         uses: waruhachi/theos-action@v2.4.10
         with:
-          theos-src: 'theos/theos'
-          theos-branch: 'master'
-          sdks-src: 'theos/sdks'
-          sdks-branch: 'master'
+          theos-src: 'waruhachi/theos'
+          theos-branch: 'main'
+          sdks-src: 'waruhachi/sdks'
+          sdks-branch: 'main'
 
-      - name: Build package
+      - name: Setup RootHide Theos
         run: |
-          make clean package FINALPACKAGE=1
+          git clone --depth 1 https://github.com/roothide/theos.git roothide-theos
+          rm -rf "$THEOS"
+          mv roothide-theos "$THEOS"
+
+      - name: Build
+        run: |
+          make clean
+          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=roothide
 
       - name: Upload DEB
         uses: actions/upload-artifact@v4
         with:
-          name: KeyboardRounded-deb
+          name: KeyboardRounded-RootHide
           path: packages/*.deb
