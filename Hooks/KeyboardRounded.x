@@ -1,4 +1,23 @@
 #import <UIKit/UIKit.h>
+#import <objc/message.h>
+
+#pragma mark - Keyboard traits
+
+@interface UIKBRenderTraits : NSObject
+- (id)geometry;
+@end
+
+#pragma mark - Keyboard renderer
+
+@interface UIKBRenderer : NSObject
+- (void)renderBackgroundTraits:(id)traits allowCaching:(BOOL)allowCaching;
+@end
+
+#pragma mark - Keyboard geometry
+
+@interface UIKBRenderGeometry : NSObject
+@property(nonatomic) CGFloat roundRectRadius;
+@end
 
 #pragma mark - Settings
 
@@ -10,15 +29,7 @@ static CGFloat KRKeyboardRadius(void) {
     return 24.0;
 }
 
-#pragma mark - Key geometry
-
-@interface UIKBRenderGeometry : NSObject
-@property(nonatomic) CGFloat roundRectRadius;
-@end
-
-@interface UIKBRenderer : NSObject
-- (void)renderBackgroundTraits:(id)traits allowCaching:(BOOL)allowCaching;
-@end
+#pragma mark - Key radius
 
 %hook UIKBRenderer
 
@@ -26,8 +37,14 @@ static CGFloat KRKeyboardRadius(void) {
 
     id geometry = nil;
 
-    if ([traits respondsToSelector:@selector(geometry)]) {
-        geometry = [traits geometry];
+    if (traits &&
+        [traits respondsToSelector:@selector(geometry)]) {
+
+        geometry =
+            ((id (*)(id, SEL))objc_msgSend)(
+                traits,
+                @selector(geometry)
+            );
     }
 
     BOOL canRound =
@@ -38,15 +55,29 @@ static CGFloat KRKeyboardRadius(void) {
     CGFloat oldRadius = 0.0;
 
     if (canRound) {
-        oldRadius = [geometry roundRectRadius];
 
-        [geometry setRoundRectRadius:KRKeyRadius()];
+        oldRadius =
+            ((CGFloat (*)(id, SEL))objc_msgSend)(
+                geometry,
+                @selector(roundRectRadius)
+            );
+
+        ((void (*)(id, SEL, CGFloat))objc_msgSend)(
+            geometry,
+            @selector(setRoundRectRadius:),
+            KRKeyRadius()
+        );
     }
 
     %orig(traits, allowCaching);
 
     if (canRound) {
-        [geometry setRoundRectRadius:oldRadius];
+
+        ((void (*)(id, SEL, CGFloat))objc_msgSend)(
+            geometry,
+            @selector(setRoundRectRadius:),
+            oldRadius
+        );
     }
 }
 
@@ -70,9 +101,7 @@ static void KRApplyKeyboardBackgroundRadius(UIView *view) {
     if (!layer)
         return;
 
-    CGFloat radius = KRKeyboardRadius();
-
-    layer.cornerRadius = radius;
+    layer.cornerRadius = KRKeyboardRadius();
     layer.masksToBounds = YES;
 }
 
