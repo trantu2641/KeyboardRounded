@@ -19,19 +19,28 @@ jobs:
           sdks-src: 'waruhachi/sdks'
           sdks-branch: 'main'
 
-      - name: Setup RootHide Theos
+      - name: Install dm.pl
         run: |
-          git clone --depth 1 https://github.com/roothide/theos.git roothide-theos
-          rm -rf "$THEOS"
-          mv roothide-theos "$THEOS"
+          git clone --depth 1 https://github.com/theos/dm.pl.git "$HOME/dm.pl"
+          chmod +x "$HOME/dm.pl/dm.pl"
+          mkdir -p "$THEOS/bin"
+          cp "$HOME/dm.pl/dm.pl" "$THEOS/bin/dm.pl"
+          echo "$THEOS/bin" >> "$GITHUB_PATH"
+
+      - name: Verify build tools
+        run: |
+          echo "THEOS=$THEOS"
+          ls -l "$THEOS/bin/dm.pl"
+          perl "$THEOS/bin/dm.pl" --help
 
       - name: Build
         run: |
           make clean
-          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=roothide
+          make package FINALPACKAGE=1
 
       - name: Upload DEB
         uses: actions/upload-artifact@v4
         with:
           name: KeyboardRounded-RootHide
           path: packages/*.deb
+          if-no-files-found: error
