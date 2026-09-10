@@ -25,13 +25,6 @@ jobs:
           chmod +x "$HOME/dm.pl/dm.pl"
           mkdir -p "$THEOS/bin"
           cp "$HOME/dm.pl/dm.pl" "$THEOS/bin/dm.pl"
-          echo "$THEOS/bin" >> "$GITHUB_PATH"
-
-      - name: Verify build tools
-        run: |
-          echo "THEOS=$THEOS"
-          ls -l "$THEOS/bin/dm.pl"
-          perl "$THEOS/bin/dm.pl" --help
 
       - name: Build
         run: |
