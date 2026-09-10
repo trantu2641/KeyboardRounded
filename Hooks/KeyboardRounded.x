@@ -1,102 +1,89 @@
 #import <UIKit/UIKit.h>
 
-#pragma mark - Settings
-
-// Radius mong muốn cho tất cả key
 static CGFloat KRKeyRadius(void) {
     return 12.0;
 }
 
-// Radius của nền ngoài keyboard
-static CGFloat KRKeyboardRadius(void) {
-    return 28.0;
-}
-
-#pragma mark - Keyboard Render Factories
+#pragma mark - 10 Key Round Factory
 
 @interface UIKBRenderFactory10Key_Round : NSObject
-- (double)keyCornerRadius;
+- (BOOL)shouldUseRoundCornerForKey:(id)key;
+- (int)roundCornersForKey:(id)key onKeyplane:(id)keyplane;
+- (void)_customizeGeometry:(id)geometry
+                    forKey:(id)key
+                  contents:(id)contents
+               onKeyplane:(id)keyplane;
 @end
-
-@interface UIKBRenderFactory_Monolith : NSObject
-- (double)keyRoundRectRadius;
-@end
-
-/*
- * Đây là phần quan trọng nhất.
- *
- * WERTY / ASDF... / ZXCV... được tạo bởi keyboard
- * render factory. Override keyCornerRadius để đưa
- * radius về cùng một giá trị với Q/P/A/L.
- */
 
 %hook UIKBRenderFactory10Key_Round
 
-- (double)keyCornerRadius {
-    return KRKeyRadius();
+/*
+ * Ép tất cả key sử dụng rounded corner.
+ */
+- (BOOL)shouldUseRoundCornerForKey:(id)key {
+    return YES;
+}
+
+/*
+ * 0xF = cả 4 góc.
+ */
+- (int)roundCornersForKey:(id)key
+              onKeyplane:(id)keyplane {
+    return 0xF;
+}
+
+/*
+ * Sau khi UIKit tạo geometry cho từng key,
+ * đặt radius giống nhau.
+ */
+- (void)_customizeGeometry:(id)geometry
+                    forKey:(id)key
+                  contents:(id)contents
+               onKeyplane:(id)keyplane {
+
+    %orig(geometry, key, contents, keyplane);
+
+    if (geometry &&
+        [geometry respondsToSelector:@selector(setRoundRectRadius:)]) {
+
+        [geometry setRoundRectRadius:KRKeyRadius()];
+    }
 }
 
 %end
 
 
-/*
- * Một số keyplane/layout khác sử dụng
- * keyRoundRectRadius thay vì keyCornerRadius.
- */
+#pragma mark - Monolith Factory
+
+@interface UIKBRenderFactory_Monolith : NSObject
+- (void)configureCornersOnGeometry:(id)geometry
+                            forKey:(id)key;
+- (double)keyRoundRectRadius;
+@end
 
 %hook UIKBRenderFactory_Monolith
 
+/*
+ * Đây là factory khác mà iOS có thể dùng
+ * cho letter keys.
+ */
 - (double)keyRoundRectRadius {
     return KRKeyRadius();
 }
 
-%end
+/*
+ * Ép geometry của từng key về radius mong muốn.
+ */
+- (void)configureCornersOnGeometry:(id)geometry
+                            forKey:(id)key {
 
+    %orig(geometry, key);
 
-#pragma mark - Keyboard Background
+    if (geometry &&
+        [geometry respondsToSelector:@selector(setRoundRectRadius:)]) {
 
-@interface UIKBBackdropView : UIView
-@end
-
-@interface UIKBVisualEffectView : UIView
-@end
-
-static void KRApplyKeyboardBackgroundRadius(UIView *view) {
-
-    if (!view)
-        return;
-
-    CALayer *layer = view.layer;
-
-    if (!layer)
-        return;
-
-    layer.cornerRadius = KRKeyboardRadius();
-    layer.masksToBounds = YES;
-}
-
-#pragma mark - Backdrop
-
-%hook UIKBBackdropView
-
-- (void)layoutSubviews {
-
-    %orig;
-
-    KRApplyKeyboardBackgroundRadius(self);
-}
-
-%end
-
-#pragma mark - Visual Effect
-
-%hook UIKBVisualEffectView
-
-- (void)layoutSubviews {
-
-    %orig;
-
-    KRApplyKeyboardBackgroundRadius(self);
+        [geometry setRoundRectRadius:KRKeyRadius()];
+    }
 }
 
 %end
