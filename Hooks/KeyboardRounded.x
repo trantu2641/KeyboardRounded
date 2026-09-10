@@ -1,89 +1,41 @@
 #import <UIKit/UIKit.h>
-#import <objc/message.h>
 
-#pragma mark - Keyboard traits
+#pragma mark - Settings
 
-@interface UIKBRenderTraits : NSObject
-- (id)geometry;
-@end
+// Độ bo của TẤT CẢ phím
+static CGFloat KRKeyRadius(void) {
+    return 12.0;
+}
 
-#pragma mark - Keyboard renderer
+// Độ bo của nền keyboard
+static CGFloat KRKeyboardRadius(void) {
+    return 28.0;
+}
 
-@interface UIKBRenderer : NSObject
-- (void)renderBackgroundTraits:(id)traits allowCaching:(BOOL)allowCaching;
-@end
-
-#pragma mark - Keyboard geometry
+#pragma mark - Keyboard Key Geometry
 
 @interface UIKBRenderGeometry : NSObject
 @property(nonatomic) CGFloat roundRectRadius;
 @end
 
-#pragma mark - Settings
+/*
+ * Quan trọng:
+ * Hook trực tiếp setter của geometry.
+ *
+ * Không hook UIKBRenderer nữa.
+ * Vì WERTY/UIO... có thể sử dụng geometry riêng,
+ * nên thay đổi ở đây sẽ áp dụng cho từng geometry.
+ */
 
-static CGFloat KRKeyRadius(void) {
-    return 12.0;
-}
+%hook UIKBRenderGeometry
 
-static CGFloat KRKeyboardRadius(void) {
-    return 24.0;
-}
-
-#pragma mark - Key radius
-
-%hook UIKBRenderer
-
-- (void)renderBackgroundTraits:(id)traits allowCaching:(BOOL)allowCaching {
-
-    id geometry = nil;
-
-    if (traits &&
-        [traits respondsToSelector:@selector(geometry)]) {
-
-        geometry =
-            ((id (*)(id, SEL))objc_msgSend)(
-                traits,
-                @selector(geometry)
-            );
-    }
-
-    BOOL canRound =
-        geometry &&
-        [geometry respondsToSelector:@selector(roundRectRadius)] &&
-        [geometry respondsToSelector:@selector(setRoundRectRadius:)];
-
-    CGFloat oldRadius = 0.0;
-
-    if (canRound) {
-
-        oldRadius =
-            ((CGFloat (*)(id, SEL))objc_msgSend)(
-                geometry,
-                @selector(roundRectRadius)
-            );
-
-        ((void (*)(id, SEL, CGFloat))objc_msgSend)(
-            geometry,
-            @selector(setRoundRectRadius:),
-            KRKeyRadius()
-        );
-    }
-
-    %orig(traits, allowCaching);
-
-    if (canRound) {
-
-        ((void (*)(id, SEL, CGFloat))objc_msgSend)(
-            geometry,
-            @selector(setRoundRectRadius:),
-            oldRadius
-        );
-    }
+- (void)setRoundRectRadius:(CGFloat)radius {
+    %orig(KRKeyRadius());
 }
 
 %end
 
-#pragma mark - Keyboard background
+#pragma mark - Keyboard Background
 
 @interface UIKBBackdropView : UIView
 @end
@@ -91,8 +43,7 @@ static CGFloat KRKeyboardRadius(void) {
 @interface UIKBVisualEffectView : UIView
 @end
 
-static void KRApplyKeyboardBackgroundRadius(UIView *view) {
-
+static void KRApplyBackgroundRadius(UIView *view) {
     if (!view)
         return;
 
@@ -110,24 +61,9 @@ static void KRApplyKeyboardBackgroundRadius(UIView *view) {
 %hook UIKBBackdropView
 
 - (void)layoutSubviews {
-
     %orig;
 
-    KRApplyKeyboardBackgroundRadius(self);
-}
-
-- (void)setFrame:(CGRect)frame {
-
-    %orig(frame);
-
-    KRApplyKeyboardBackgroundRadius(self);
-}
-
-- (void)setBounds:(CGRect)bounds {
-
-    %orig(bounds);
-
-    KRApplyKeyboardBackgroundRadius(self);
+    KRApplyBackgroundRadius(self);
 }
 
 %end
@@ -137,10 +73,9 @@ static void KRApplyKeyboardBackgroundRadius(UIView *view) {
 %hook UIKBVisualEffectView
 
 - (void)layoutSubviews {
-
     %orig;
 
-    KRApplyKeyboardBackgroundRadius(self);
+    KRApplyBackgroundRadius(self);
 }
 
 %end
