@@ -5,53 +5,95 @@ static CGFloat KRKeyRadius(void) {
     return 8.0;
 }
 
+#pragma mark - UIKBRenderGeometry
+
 @interface UIKBRenderGeometry : NSObject
 @property(nonatomic) double roundRectRadius;
 @property(nonatomic) int roundRectCorners;
 @end
 
-@interface UIKBRenderTraits : NSObject
-- (id)geometry;
+#pragma mark - UIKBRenderFactory_Monolith
+
+@interface UIKBRenderFactory_Monolith : NSObject
+
+- (id)_traitsForKey:(id)key
+       onKeyplane:(id)keyplane;
+
+- (id)_variantTraitsForLetterKey:(id)key
+                       onKeyplane:(id)keyplane;
+
 @end
 
-@interface UIKBRenderer : NSObject
-- (void)renderBackgroundTraits:(id)traits allowCaching:(BOOL)allowCaching;
-@end
+%hook UIKBRenderFactory_Monolith
 
-%hook UIKBRenderer
-
-- (void)renderBackgroundTraits:(id)traits
-                  allowCaching:(BOOL)allowCaching
+- (id)_traitsForKey:(id)key
+       onKeyplane:(id)keyplane
 {
-    id geometry = nil;
+    id traits = %orig(key, keyplane);
 
-    if (traits &&
-        [traits respondsToSelector:@selector(geometry)]) {
-        geometry = ((id (*)(id, SEL))objc_msgSend)(
-            traits,
-            @selector(geometry)
+    if (!traits)
+        return traits;
+
+    if (![traits respondsToSelector:@selector(geometry)])
+        return traits;
+
+    id geometry = [traits geometry];
+
+    if (!geometry)
+        return traits;
+
+    if ([geometry respondsToSelector:@selector(setRoundRectRadius:)]) {
+        ((void (*)(id, SEL, double))objc_msgSend)(
+            geometry,
+            @selector(setRoundRectRadius:),
+            KRKeyRadius()
         );
     }
 
-    if (geometry) {
-        if ([geometry respondsToSelector:@selector(setRoundRectRadius:)]) {
-            ((void (*)(id, SEL, double))objc_msgSend)(
-                geometry,
-                @selector(setRoundRectRadius:),
-                (double)KRKeyRadius()
-            );
-        }
-
-        if ([geometry respondsToSelector:@selector(setRoundRectCorners:)]) {
-            ((void (*)(id, SEL, int))objc_msgSend)(
-                geometry,
-                @selector(setRoundRectCorners:),
-                0xF
-            );
-        }
+    if ([geometry respondsToSelector:@selector(setRoundRectCorners:)]) {
+        ((void (*)(id, SEL, int))objc_msgSend)(
+            geometry,
+            @selector(setRoundRectCorners:),
+            0xF
+        );
     }
 
-    %orig(traits, allowCaching);
+    return traits;
+}
+
+- (id)_variantTraitsForLetterKey:(id)key
+                       onKeyplane:(id)keyplane
+{
+    id traits = %orig(key, keyplane);
+
+    if (!traits)
+        return traits;
+
+    if (![traits respondsToSelector:@selector(geometry)])
+        return traits;
+
+    id geometry = [traits geometry];
+
+    if (!geometry)
+        return traits;
+
+    if ([geometry respondsToSelector:@selector(setRoundRectRadius:)]) {
+        ((void (*)(id, SEL, double))objc_msgSend)(
+            geometry,
+            @selector(setRoundRectRadius:),
+            KRKeyRadius()
+        );
+    }
+
+    if ([geometry respondsToSelector:@selector(setRoundRectCorners:)]) {
+        ((void (*)(id, SEL, int))objc_msgSend)(
+            geometry,
+            @selector(setRoundRectCorners:),
+            0xF
+        );
+    }
+
+    return traits;
 }
 
 %end
