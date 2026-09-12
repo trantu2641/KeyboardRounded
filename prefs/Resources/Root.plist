@@ -1,20 +1,20 @@
 {
-    PreferenceSpecifiers = (
+    items = (
         {
-            Type = PSGroupSpecifier;
-            Label = "Keyboard Rounded";
-            FooterText = "Điều chỉnh độ bo góc của các phím.";
+            cell = PSGroupCell;
+            footerText = "Điều chỉnh độ bo góc của các phím.";
+            label = "Keyboard Rounded";
         },
         {
-            Type = PSSliderSpecifier;
-            Key = KeyRadius;
-            DefaultValue = 10;
-            MinimumValue = 0;
-            MaximumValue = 20;
-            Title = "Key Radius";
-            Defaults = "com.tutu.keyboardrounded";
-            ShowValue = YES;
+            PostNotification = "com.tutu.keyboardrounded/settingschanged";
+            cell = PSSliderCell;
+            default = 10.0;
+            defaults = "com.tutu.keyboardrounded";
+            key = "KeyRadius";
+            min = 0.0;
+            max = 20.0;
+            label = "Key Radius";
         }
     );
-    Title = "Keyboard Rounded";
+    title = "Keyboard Rounded";
 }
