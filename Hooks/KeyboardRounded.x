@@ -1,158 +1,89 @@
 #import <UIKit/UIKit.h>
-#import <objc/message.h>
+#import <CoreFoundation/CoreFoundation.h>
 
 #pragma mark - Settings
 
-static NSString * const KRPreferencesDomain = @"com.tutu.keyboardrounded";
-static NSString * const KRRadiusKey = @"KeyRadius";
-static NSString * const KRSettingsChangedNotification =
-    @"com.tutu.keyboardrounded/settingschanged";
-
 static CGFloat KRKeyRadius(void) {
-    NSUserDefaults *defaults =
-        [[NSUserDefaults alloc] initWithSuiteName:KRPreferencesDomain];
+    CFPropertyListRef value = CFPreferencesCopyAppValue(
+        CFSTR("KeyRadius"),
+        CFSTR("com.tutu.keyboardrounded")
+    );
 
-    CGFloat radius = [defaults floatForKey:KRRadiusKey];
+    CGFloat radius = 10.0;
 
-    // 0 = chưa có giá trị → dùng mặc định
-    if (radius <= 0.0) {
-        radius = 10.0;
+    if (value && CFGetTypeID(value) == CFNumberGetTypeID()) {
+        double number = 10.0;
+        CFNumberGetValue(
+            (CFNumberRef)value,
+            kCFNumberDoubleType,
+            &number
+        );
+
+        radius = (CGFloat)number;
     }
 
-    return MAX(0.0, MIN(radius, 20.0));
+    if (value) {
+        CFRelease(value);
+    }
+
+    // Giới hạn tuyệt đối 0 - 20
+    if (radius < 0.0)
+        radius = 0.0;
+
+    if (radius > 20.0)
+        radius = 20.0;
+
+    return radius;
 }
 
-#pragma mark - Keyboard Geometry
+#pragma mark - UIKBRenderFactory10Key_Round
 
-@interface UIKBRenderGeometry : NSObject
-@property(nonatomic) double roundRectRadius;
-@property(nonatomic) int roundRectCorners;
-@end
+@interface UIKBRenderFactory10Key_Round : NSObject
 
-#pragma mark - Keyboard Traits
-
-@interface UIKBRenderTraits : NSObject
-@end
-
-#pragma mark - iPhone Keyboard Factory
-
-@interface UIKBRenderFactoryiPhone : NSObject
-
-- (id)_traitsForKey:(id)key
-       onKeyplane:(id)keyplane;
+- (double)keyCornerRadius;
+- (BOOL)shouldUseRoundCornerForKey:(id)key;
+- (int)roundCornersForKey:(id)key
+             onKeyplane:(id)keyplane;
 
 @end
 
-%hook UIKBRenderFactoryiPhone
+%hook UIKBRenderFactory10Key_Round
 
-- (id)_traitsForKey:(id)key
-       onKeyplane:(id)keyplane
-{
-    id traits = %orig(key, keyplane);
+- (double)keyCornerRadius {
+    return KRKeyRadius();
+}
 
-    if (!traits)
-        return traits;
+- (BOOL)shouldUseRoundCornerForKey:(id)key {
+    return YES;
+}
 
-    /*
-     * Không gọi trực tiếp [traits geometry]
-     * để tránh lỗi compile "no known instance method".
-     */
-    SEL geometrySelector = @selector(geometry);
-
-    if (![traits respondsToSelector:geometrySelector])
-        return traits;
-
-    id geometry =
-        ((id (*)(id, SEL))objc_msgSend)(
-            traits,
-            geometrySelector
-        );
-
-    if (!geometry)
-        return traits;
-
-    /*
-     * Bo cả 4 góc của KEY.
-     */
-    SEL radiusSetter = @selector(setRoundRectRadius:);
-
-    if ([geometry respondsToSelector:radiusSetter]) {
-        ((void (*)(id, SEL, double))objc_msgSend)(
-            geometry,
-            radiusSetter,
-            (double)KRKeyRadius()
-        );
-    }
-
-    SEL cornersSetter = @selector(setRoundRectCorners:);
-
-    if ([geometry respondsToSelector:cornersSetter]) {
-        ((void (*)(id, SEL, int))objc_msgSend)(
-            geometry,
-            cornersSetter,
-            0xF
-        );
-    }
-
-    return traits;
+- (int)roundCornersForKey:(id)key
+             onKeyplane:(id)keyplane {
+    return 0xF;
 }
 
 %end
 
-#pragma mark - iPhone Landscape
+#pragma mark - UIKBRenderFactory_Monolith
 
-@interface UIKBRenderFactoryiPhoneLandscape : NSObject
+@interface UIKBRenderFactory_Monolith : NSObject
 
-- (id)_traitsForKey:(id)key
-       onKeyplane:(id)keyplane;
+- (double)keyRoundRectRadius;
+
+- (void)configureCornersOnGeometry:(id)geometry
+                            forKey:(id)key;
 
 @end
 
-%hook UIKBRenderFactoryiPhoneLandscape
+%hook UIKBRenderFactory_Monolith
 
-- (id)_traitsForKey:(id)key
-       onKeyplane:(id)keyplane
-{
-    id traits = %orig(key, keyplane);
+- (double)keyRoundRectRadius {
+    return KRKeyRadius();
+}
 
-    if (!traits)
-        return traits;
-
-    SEL geometrySelector = @selector(geometry);
-
-    if (![traits respondsToSelector:geometrySelector])
-        return traits;
-
-    id geometry =
-        ((id (*)(id, SEL))objc_msgSend)(
-            traits,
-            geometrySelector
-        );
-
-    if (!geometry)
-        return traits;
-
-    SEL radiusSetter = @selector(setRoundRectRadius:);
-
-    if ([geometry respondsToSelector:radiusSetter]) {
-        ((void (*)(id, SEL, double))objc_msgSend)(
-            geometry,
-            radiusSetter,
-            (double)KRKeyRadius()
-        );
-    }
-
-    SEL cornersSetter = @selector(setRoundRectCorners:);
-
-    if ([geometry respondsToSelector:cornersSetter]) {
-        ((void (*)(id, SEL, int))objc_msgSend)(
-            geometry,
-            cornersSetter,
-            0xF
-        );
-    }
-
-    return traits;
+- (void)configureCornersOnGeometry:(id)geometry
+                            forKey:(id)key {
+    %orig(geometry, key);
 }
 
 %end
