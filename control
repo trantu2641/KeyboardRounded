@@ -6,4 +6,4 @@ Description: Simple iOS keyboard key corner rounding tweak.
 Maintainer: CongTu
 Author: CongTu
 Section: Tweaks
-Depends: mobilesubstrate
+Depends: mobilesubstrate, preferenceloader
