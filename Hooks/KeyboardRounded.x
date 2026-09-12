@@ -4,7 +4,23 @@
 #pragma mark - Settings
 
 static CGFloat KRKeyRadius(void) {
-    return 8.0;
+    NSNumber *value = [[NSUserDefaults standardUserDefaults]
+        objectForKey:@"KeyRadius"];
+
+    if (value) {
+        CGFloat radius = [value doubleValue];
+
+        if (radius < 1.0)
+            radius = 1.0;
+
+        if (radius > 16.0)
+            radius = 16.0;
+
+        return radius;
+    }
+
+    // Giá trị mặc định
+    return 10.0;
 }
 
 #pragma mark - Keyboard Geometry
@@ -38,11 +54,6 @@ static CGFloat KRKeyRadius(void) {
     if (!traits)
         return traits;
 
-    /*
-     * Không gọi [traits geometry].
-     * Lấy geometry bằng objc_msgSend để tránh lỗi
-     * "no known instance method for selector 'geometry'".
-     */
     SEL geometrySelector = @selector(geometry);
 
     if (![traits respondsToSelector:geometrySelector])
@@ -57,9 +68,6 @@ static CGFloat KRKeyRadius(void) {
     if (!geometry)
         return traits;
 
-    /*
-     * Ép toàn bộ 4 góc của key.
-     */
     SEL radiusSetter = @selector(setRoundRectRadius:);
 
     if ([geometry respondsToSelector:radiusSetter]) {
