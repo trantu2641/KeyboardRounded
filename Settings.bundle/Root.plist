@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+ "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+
+<plist version="1.0">
+<dict>
+
+    <key>PreferenceSpecifiers</key>
+    <array>
+
+        <dict>
+            <key>Type</key>
+            <string>PSGroupSpecifier</string>
+
+            <key>Title</key>
+            <string>Keyboard Rounded</string>
+
+            <key>FooterText</key>
+            <string>Điều chỉnh độ bo góc của các phím.</string>
+        </dict>
+
+        <dict>
+            <key>Type</key>
+            <string>PSSliderSpecifier</string>
+
+            <key>Title</key>
+            <string>Key Radius</string>
+
+            <key>Key</key>
+            <string>KeyRadius</string>
+
+            <key>DefaultValue</key>
+            <real>10.0</real>
+
+            <key>MinimumValue</key>
+            <real>4.0</real>
+
+            <key>MaximumValue</key>
+            <real>16.0</real>
+
+            <key>MinimumValueImage</key>
+            <string>circle</string>
+
+            <key>MaximumValueImage</key>
+            <string>circle.fill</string>
+
+            <key>ShowValue</key>
+            <true/>
+
+            <key>PostNotification</key>
+            <string>com.trantu2641.KeyboardRounded.settingsChanged</string>
+        </dict>
+
+        <dict>
+            <key>Type</key>
+            <string>PSChildPaneSpecifier</string>
+
+            <key>Title</key>
+            <string>About</string>
+        </dict>
+
+    </array>
+
+</dict>
+</plist>
