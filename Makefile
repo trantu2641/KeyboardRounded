@@ -11,8 +11,7 @@ KeyboardRounded_FILES = Hooks/KeyboardRounded.x
 KeyboardRounded_CFLAGS = -fobjc-arc
 KeyboardRounded_FRAMEWORKS = UIKit
 
-include $(THEOS_MAKE_PATH)/tweak.mk
+SUBPROJECTS += prefs
 
-after-package::
-	$(ECHO_NOTHING)mkdir -p $(THEOS_STAGING_DIR)/Library/PreferenceBundles/KeyboardRounded.bundle$(ECHO_END)
-	$(ECHO_NOTHING)cp -R Settings.bundle/* $(THEOS_STAGING_DIR)/Library/PreferenceBundles/KeyboardRounded.bundle/$(ECHO_END)
+include $(THEOS_MAKE_PATH)/tweak.mk
+include $(THEOS_MAKE_PATH)/aggregate.mk
