@@ -1,54 +1,25 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
- "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-
-<plist version="1.0">
 <dict>
+    <key>cell</key>
+    <string>PSSliderCell</string>
 
-    <key>title</key>
-    <string>Keyboard Rounded</string>
+    <key>defaults</key>
+    <string>com.tutu.keyboardrounded</string>
 
-    <key>PreferenceSpecifiers</key>
-    <array>
+    <key>key</key>
+    <string>KeyRadius</string>
 
-        <dict>
-            <key>cell</key>
-            <string>PSGroupCell</string>
+    <key>default</key>
+    <real>10.0</real>
 
-            <key>label</key>
-            <string>Keyboard Rounded</string>
+    <key>min</key>
+    <real>0.0</real>
 
-            <key>footerText</key>
-            <string>Customize the corner radius of keyboard keys.</string>
-        </dict>
+    <key>max</key>
+    <real>20.0</real>
 
-        <dict>
-            <key>cell</key>
-            <string>PSSliderCell</string>
+    <key>label</key>
+    <string>Key Radius</string>
 
-            <key>defaults</key>
-            <string>com.tutu.keyboardrounded</string>
-
-            <key>key</key>
-            <string>KeyRadius</string>
-
-            <key>default</key>
-            <real>10.0</real>
-
-            <key>min</key>
-            <real>4.0</real>
-
-            <key>max</key>
-            <real>16.0</real>
-
-            <key>label</key>
-            <string>Key Radius</string>
-
-            <key>PostNotification</key>
-            <string>com.tutu.keyboardrounded/settingschanged</string>
-        </dict>
-
-    </array>
-
+    <key>PostNotification</key>
+    <string>com.tutu.keyboardrounded/settingschanged</string>
 </dict>
-</plist>
