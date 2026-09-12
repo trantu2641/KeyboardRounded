@@ -1,51 +1,69 @@
 #import <UIKit/UIKit.h>
+#import <objc/message.h>
 
 static CGFloat KRKeyRadius(void) {
-    return 8.0;
+    return 12.0;
 }
 
-#pragma mark - UIKBRenderFactory10Key_Round
+#pragma mark - UIKBRenderFactory10Key
 
-@interface UIKBRenderFactory10Key_Round : NSObject
-- (double)keyCornerRadius;
-- (BOOL)shouldUseRoundCornerForKey:(id)key;
+@interface UIKBRenderFactory10Key : NSObject
 - (int)roundCornersForKey:(id)key onKeyplane:(id)keyplane;
+- (BOOL)useRoundCorner;
 @end
 
-%hook UIKBRenderFactory10Key_Round
+%hook UIKBRenderFactory10Key
 
-- (double)keyCornerRadius {
-    return KRKeyRadius();
-}
-
-- (BOOL)shouldUseRoundCornerForKey:(id)key {
+- (BOOL)useRoundCorner {
     return YES;
 }
 
-- (int)roundCornersForKey:(id)key onKeyplane:(id)keyplane {
+- (int)roundCornersForKey:(id)key
+              onKeyplane:(id)keyplane {
     return 0xF;
 }
 
 %end
 
 
-#pragma mark - UIKBRenderFactory_Monolith
+#pragma mark - UIKBRenderFactory10Key_Round
 
-@interface UIKBRenderFactory_Monolith : NSObject
-- (double)keyRoundRectRadius;
-- (void)configureCornersOnGeometry:(id)geometry forKey:(id)key;
+@interface UIKBRenderFactory10Key_Round : NSObject
+- (BOOL)shouldUseRoundCornerForKey:(id)key;
+- (int)roundCornersForKey:(id)key onKeyplane:(id)keyplane;
+- (void)_customizeGeometry:(id)geometry
+                    forKey:(id)key
+                  contents:(id)contents
+               onKeyplane:(id)keyplane;
 @end
 
-%hook UIKBRenderFactory_Monolith
+%hook UIKBRenderFactory10Key_Round
 
-- (double)keyRoundRectRadius {
-    return KRKeyRadius();
+- (BOOL)shouldUseRoundCornerForKey:(id)key {
+    return YES;
 }
 
-- (void)configureCornersOnGeometry:(id)geometry
-                            forKey:(id)key {
+- (int)roundCornersForKey:(id)key
+              onKeyplane:(id)keyplane {
+    return 0xF;
+}
 
-    %orig(geometry, key);
+- (void)_customizeGeometry:(id)geometry
+                    forKey:(id)key
+                  contents:(id)contents
+               onKeyplane:(id)keyplane {
+
+    %orig(geometry, key, contents, keyplane);
+
+    if (geometry &&
+        [geometry respondsToSelector:@selector(setRoundRectRadius:)]) {
+
+        ((void (*)(id, SEL, CGFloat))objc_msgSend)(
+            geometry,
+            @selector(setRoundRectRadius:),
+            KRKeyRadius()
+        );
+    }
 }
 
 %end
