@@ -23,6 +23,9 @@
         <key>label</key>
         <string>Keyboard Rounded</string>
 
+        <key>icon</key>
+        <string>icon.png</string>
+
     </dict>
 
 </dict>
