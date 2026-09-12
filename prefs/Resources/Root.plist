@@ -1,25 +1,20 @@
-<dict>
-    <key>cell</key>
-    <string>PSSliderCell</string>
-
-    <key>defaults</key>
-    <string>com.tutu.keyboardrounded</string>
-
-    <key>key</key>
-    <string>KeyRadius</string>
-
-    <key>default</key>
-    <real>10.0</real>
-
-    <key>min</key>
-    <real>0.0</real>
-
-    <key>max</key>
-    <real>20.0</real>
-
-    <key>label</key>
-    <string>Key Radius</string>
-
-    <key>PostNotification</key>
-    <string>com.tutu.keyboardrounded/settingschanged</string>
-</dict>
+{
+    PreferenceSpecifiers = (
+        {
+            Type = PSGroupSpecifier;
+            Label = "Keyboard Rounded";
+            FooterText = "Điều chỉnh độ bo góc của các phím.";
+        },
+        {
+            Type = PSSliderSpecifier;
+            Key = KeyRadius;
+            DefaultValue = 10;
+            MinimumValue = 0;
+            MaximumValue = 20;
+            Title = "Key Radius";
+            Defaults = "com.tutu.keyboardrounded";
+            ShowValue = YES;
+        }
+    );
+    Title = "Keyboard Rounded";
+}
