@@ -7,6 +7,7 @@ include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = KeyboardRounded
 
+KeyboardRounded_BUNDLE = Settings.bundle
 KeyboardRounded_FILES = Hooks/KeyboardRounded.x
 KeyboardRounded_CFLAGS = -fobjc-arc
 KeyboardRounded_FRAMEWORKS = UIKit
