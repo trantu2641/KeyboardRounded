@@ -5,13 +5,10 @@ include $(THEOS)/makefiles/common.mk
 
 BUNDLE_NAME = KeyboardRoundedPrefs
 
-KeyboardRoundedPrefs_RESOURCE_FILES = \
-    Resources/Root.plist \
-    Resources/icon.png
+KeyboardRoundedPrefs_FILES = KeyboardRoundedPrefs/KRRootListController.m
 KeyboardRoundedPrefs_INSTALL_PATH = /Library/PreferenceBundles
 KeyboardRoundedPrefs_FRAMEWORKS = UIKit
 KeyboardRoundedPrefs_PRIVATE_FRAMEWORKS = Preferences
-
 KeyboardRoundedPrefs_RESOURCE_FILES = Resources/Root.plist Resources/icon.png
 
 include $(THEOS_MAKE_PATH)/bundle.mk
