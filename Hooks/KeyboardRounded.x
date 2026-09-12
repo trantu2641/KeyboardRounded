@@ -1,39 +1,54 @@
 #import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 #import <objc/message.h>
 
 #pragma mark - Settings
 
-static CGFloat KRKeyRadius(void) {
+static CGFloat KRKeyRadius(void)
+{
+    CGFloat radius = 8.0;
+
     CFPropertyListRef pref =
         CFPreferencesCopyAppValue(
             CFSTR("KeyRadius"),
             CFSTR("com.tutu.keyboardrounded")
         );
 
-    CGFloat radius = 8.0;
+    if (pref)
+    {
+        CFTypeID type = CFGetTypeID(pref);
 
-    if (pref && CFGetTypeID(pref) == CFNumberGetTypeID()) {
-        double value = 8.0;
+        // PSEditTextCell có thể lưu giá trị thành CFString
+        if (type == CFStringGetTypeID())
+        {
+            NSString *stringValue =
+                [(__bridge NSString *)pref copy];
 
-        if (CFNumberGetValue(
-                (CFNumberRef)pref,
-                kCFNumberDoubleType,
-                &value)) {
-            radius = (CGFloat)value;
+            radius = [stringValue doubleValue];
         }
-    }
+        // Nếu được lưu thành CFNumber
+        else if (type == CFNumberGetTypeID())
+        {
+            double numberValue = 8.0;
 
-    if (pref) {
+            if (CFNumberGetValue(
+                    (CFNumberRef)pref,
+                    kCFNumberDoubleType,
+                    &numberValue))
+            {
+                radius = (CGFloat)numberValue;
+            }
+        }
+
         CFRelease(pref);
     }
 
-    if (radius < 0.0) {
+    // Giới hạn 0 - 20
+    if (radius < 0.0)
         radius = 0.0;
-    }
 
-    if (radius > 20.0) {
+    if (radius > 20.0)
         radius = 20.0;
-    }
 
     return radius;
 }
@@ -41,11 +56,6 @@ static CGFloat KRKeyRadius(void) {
 #pragma mark - Keyboard Geometry
 
 @interface UIKBRenderGeometry : NSObject
-@end
-
-#pragma mark - Keyboard Traits
-
-@interface UIKBRenderTraits : NSObject
 @end
 
 #pragma mark - iPhone Keyboard Factory
@@ -64,21 +74,13 @@ static CGFloat KRKeyRadius(void) {
 {
     id traits = %orig(key, keyplane);
 
-    if (!traits) {
+    if (!traits)
         return traits;
-    }
-
-    /*
-     * Không gọi [traits geometry] trực tiếp.
-     * Dùng objc_msgSend để tránh lỗi:
-     * no known instance method for selector 'geometry'
-     */
 
     SEL geometrySelector = @selector(geometry);
 
-    if (![traits respondsToSelector:geometrySelector]) {
+    if (![traits respondsToSelector:geometrySelector])
         return traits;
-    }
 
     id geometry =
         ((id (*)(id, SEL))objc_msgSend)(
@@ -86,21 +88,15 @@ static CGFloat KRKeyRadius(void) {
             geometrySelector
         );
 
-    if (!geometry) {
+    if (!geometry)
         return traits;
-    }
 
-    /*
-     * Lấy radius từ Settings.
-     * Giá trị được giới hạn trong khoảng 0 - 20.
-     */
+    CGFloat radius = KRKeyRadius();
 
     SEL radiusSetter = @selector(setRoundRectRadius:);
 
-    if ([geometry respondsToSelector:radiusSetter]) {
-
-        CGFloat radius = KRKeyRadius();
-
+    if ([geometry respondsToSelector:radiusSetter])
+    {
         ((void (*)(id, SEL, double))objc_msgSend)(
             geometry,
             radiusSetter,
@@ -108,14 +104,10 @@ static CGFloat KRKeyRadius(void) {
         );
     }
 
-    /*
-     * Bo cả 4 góc của phím.
-     */
-
     SEL cornersSetter = @selector(setRoundRectCorners:);
 
-    if ([geometry respondsToSelector:cornersSetter]) {
-
+    if ([geometry respondsToSelector:cornersSetter])
+    {
         ((void (*)(id, SEL, int))objc_msgSend)(
             geometry,
             cornersSetter,
@@ -144,19 +136,13 @@ static CGFloat KRKeyRadius(void) {
 {
     id traits = %orig(key, keyplane);
 
-    if (!traits) {
+    if (!traits)
         return traits;
-    }
-
-    /*
-     * Lấy geometry bằng objc_msgSend.
-     */
 
     SEL geometrySelector = @selector(geometry);
 
-    if (![traits respondsToSelector:geometrySelector]) {
+    if (![traits respondsToSelector:geometrySelector])
         return traits;
-    }
 
     id geometry =
         ((id (*)(id, SEL))objc_msgSend)(
@@ -164,20 +150,15 @@ static CGFloat KRKeyRadius(void) {
             geometrySelector
         );
 
-    if (!geometry) {
+    if (!geometry)
         return traits;
-    }
 
-    /*
-     * Áp dụng radius từ Settings.
-     */
+    CGFloat radius = KRKeyRadius();
 
     SEL radiusSetter = @selector(setRoundRectRadius:);
 
-    if ([geometry respondsToSelector:radiusSetter]) {
-
-        CGFloat radius = KRKeyRadius();
-
+    if ([geometry respondsToSelector:radiusSetter])
+    {
         ((void (*)(id, SEL, double))objc_msgSend)(
             geometry,
             radiusSetter,
@@ -185,14 +166,10 @@ static CGFloat KRKeyRadius(void) {
         );
     }
 
-    /*
-     * Bo cả 4 góc.
-     */
-
     SEL cornersSetter = @selector(setRoundRectCorners:);
 
-    if ([geometry respondsToSelector:cornersSetter]) {
-
+    if ([geometry respondsToSelector:cornersSetter])
+    {
         ((void (*)(id, SEL, int))objc_msgSend)(
             geometry,
             cornersSetter,
