@@ -1,69 +1,93 @@
 #import <UIKit/UIKit.h>
-#import <objc/message.h>
+
+#pragma mark - Settings
 
 static CGFloat KRKeyRadius(void) {
-    return 12.0;
+    return 8.0;
 }
 
-#pragma mark - UIKBRenderFactory10Key
+#pragma mark - Keyboard Geometry
 
-@interface UIKBRenderFactory10Key : NSObject
-- (int)roundCornersForKey:(id)key onKeyplane:(id)keyplane;
-- (BOOL)useRoundCorner;
+@interface UIKBRenderGeometry : NSObject
+@property(nonatomic) double roundRectRadius;
+@property(nonatomic) int roundRectCorners;
 @end
 
-%hook UIKBRenderFactory10Key
+@interface UIKBRenderTraits : NSObject
+- (id)geometry;
+@end
 
-- (BOOL)useRoundCorner {
-    return YES;
-}
+#pragma mark - iPhone Keyboard Factory
 
-- (int)roundCornersForKey:(id)key
-              onKeyplane:(id)keyplane {
-    return 0xF;
+@interface UIKBRenderFactoryiPhone : NSObject
+- (id)_traitsForKey:(id)key onKeyplane:(id)keyplane;
+@end
+
+%hook UIKBRenderFactoryiPhone
+
+- (id)_traitsForKey:(id)key
+       onKeyplane:(id)keyplane {
+
+    id traits = %orig(key, keyplane);
+
+    if (!traits)
+        return traits;
+
+    if (![traits respondsToSelector:@selector(geometry)])
+        return traits;
+
+    id geometry = [traits geometry];
+
+    if (!geometry)
+        return traits;
+
+    if ([geometry respondsToSelector:@selector(setRoundRectRadius:)]) {
+        [geometry setRoundRectRadius:KRKeyRadius()];
+    }
+
+    if ([geometry respondsToSelector:@selector(setRoundRectCorners:)]) {
+        [geometry setRoundRectCorners:0xF];
+    }
+
+    return traits;
 }
 
 %end
 
 
-#pragma mark - UIKBRenderFactory10Key_Round
+#pragma mark - iPhone Landscape
 
-@interface UIKBRenderFactory10Key_Round : NSObject
-- (BOOL)shouldUseRoundCornerForKey:(id)key;
-- (int)roundCornersForKey:(id)key onKeyplane:(id)keyplane;
-- (void)_customizeGeometry:(id)geometry
-                    forKey:(id)key
-                  contents:(id)contents
-               onKeyplane:(id)keyplane;
+@interface UIKBRenderFactoryiPhoneLandscape : NSObject
+- (id)_traitsForKey:(id)key onKeyplane:(id)keyplane;
 @end
 
-%hook UIKBRenderFactory10Key_Round
+%hook UIKBRenderFactoryiPhoneLandscape
 
-- (BOOL)shouldUseRoundCornerForKey:(id)key {
-    return YES;
-}
+- (id)_traitsForKey:(id)key
+       onKeyplane:(id)keyplane {
 
-- (int)roundCornersForKey:(id)key
-              onKeyplane:(id)keyplane {
-    return 0xF;
-}
+    id traits = %orig(key, keyplane);
 
-- (void)_customizeGeometry:(id)geometry
-                    forKey:(id)key
-                  contents:(id)contents
-               onKeyplane:(id)keyplane {
+    if (!traits)
+        return traits;
 
-    %orig(geometry, key, contents, keyplane);
+    if (![traits respondsToSelector:@selector(geometry)])
+        return traits;
 
-    if (geometry &&
-        [geometry respondsToSelector:@selector(setRoundRectRadius:)]) {
+    id geometry = [traits geometry];
 
-        ((void (*)(id, SEL, CGFloat))objc_msgSend)(
-            geometry,
-            @selector(setRoundRectRadius:),
-            KRKeyRadius()
-        );
+    if (!geometry)
+        return traits;
+
+    if ([geometry respondsToSelector:@selector(setRoundRectRadius:)]) {
+        [geometry setRoundRectRadius:KRKeyRadius()];
     }
+
+    if ([geometry respondsToSelector:@selector(setRoundRectCorners:)]) {
+        [geometry setRoundRectCorners:0xF];
+    }
+
+    return traits;
 }
 
 %end
