@@ -3,16 +3,24 @@
         {
             cell = PSGroupCell;
             label = "Keyboard Rounded";
-            footerText = "Nhập độ bo góc của phím từ 0 đến 20.";
+            footerText = "Nhập độ bo góc từ 0 đến 20. Bấm Respring sau khi thay đổi để áp dụng.";
         },
+
         {
             cell = PSEditTextCell;
             label = "Key Radius";
-            default = 8;
+            default = "8";
             defaults = "com.tutu.keyboardrounded";
             key = "KeyRadius";
             keyboardType = 4;
+        },
+
+        {
+            cell = PSButtonCell;
+            label = "Respring";
+            action = "respring";
         }
     );
+
     title = "Keyboard Rounded";
 }
