@@ -3,24 +3,23 @@
 
 #pragma mark - Settings
 
+static NSString * const KRPreferencesDomain = @"com.tutu.keyboardrounded";
+static NSString * const KRRadiusKey = @"KeyRadius";
+static NSString * const KRSettingsChangedNotification =
+    @"com.tutu.keyboardrounded/settingschanged";
+
 static CGFloat KRKeyRadius(void) {
-    NSNumber *value = [[NSUserDefaults standardUserDefaults]
-        objectForKey:@"KeyRadius"];
+    NSUserDefaults *defaults =
+        [[NSUserDefaults alloc] initWithSuiteName:KRPreferencesDomain];
 
-    if (value) {
-        CGFloat radius = [value doubleValue];
+    CGFloat radius = [defaults floatForKey:KRRadiusKey];
 
-        if (radius < 1.0)
-            radius = 1.0;
-
-        if (radius > 16.0)
-            radius = 16.0;
-
-        return radius;
+    // 0 = chưa có giá trị → dùng mặc định
+    if (radius <= 0.0) {
+        radius = 10.0;
     }
 
-    // Giá trị mặc định
-    return 10.0;
+    return MAX(0.0, MIN(radius, 20.0));
 }
 
 #pragma mark - Keyboard Geometry
@@ -54,6 +53,10 @@ static CGFloat KRKeyRadius(void) {
     if (!traits)
         return traits;
 
+    /*
+     * Không gọi trực tiếp [traits geometry]
+     * để tránh lỗi compile "no known instance method".
+     */
     SEL geometrySelector = @selector(geometry);
 
     if (![traits respondsToSelector:geometrySelector])
@@ -68,6 +71,9 @@ static CGFloat KRKeyRadius(void) {
     if (!geometry)
         return traits;
 
+    /*
+     * Bo cả 4 góc của KEY.
+     */
     SEL radiusSetter = @selector(setRoundRectRadius:);
 
     if ([geometry respondsToSelector:radiusSetter]) {
@@ -92,7 +98,6 @@ static CGFloat KRKeyRadius(void) {
 }
 
 %end
-
 
 #pragma mark - iPhone Landscape
 
