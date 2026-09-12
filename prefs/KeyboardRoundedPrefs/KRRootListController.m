@@ -2,32 +2,8 @@
 #import <Preferences/PSControlTableCell.h>
 #import <spawn.h>
 
-@interface KRRespringCell : PSControlTableCell
+@interface KRRootListController ()
 @end
-
-@implementation KRRespringCell
-
-- (void)controlTapped:(id)sender
-{
-    pid_t pid;
-    const char *args[] = {
-        "/usr/bin/killall",
-        "SpringBoard",
-        NULL
-    };
-
-    posix_spawn(
-        &pid,
-        args[0],
-        NULL,
-        NULL,
-        (char * const *)args,
-        NULL
-    );
-}
-
-@end
-
 
 @implementation KRRootListController
 
@@ -40,6 +16,26 @@
     }
 
     return _specifiers;
+}
+
+- (void)respring
+{
+    pid_t pid;
+
+    const char *args[] = {
+        "/usr/bin/killall",
+        "SpringBoard",
+        NULL
+    };
+
+    posix_spawn(
+        &pid,
+        "/usr/bin/killall",
+        NULL,
+        NULL,
+        (char * const *)args,
+        NULL
+    );
 }
 
 @end
