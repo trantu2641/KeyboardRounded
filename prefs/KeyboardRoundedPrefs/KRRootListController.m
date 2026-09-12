@@ -6,7 +6,7 @@
 {
     if (!_specifiers) {
         _specifiers = [self loadSpecifiersFromPlistName:@"Root"
-                                                 target:self];
+                                                  target:self];
     }
 
     return _specifiers;
