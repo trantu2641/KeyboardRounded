@@ -1,32 +1,27 @@
 #import <UIKit/UIKit.h>
-#import <CoreFoundation/CoreFoundation.h>
+#import <objc/message.h>
 
 #pragma mark - Settings
 
 static CGFloat KRKeyRadius(void) {
-    CFPropertyListRef value = CFPreferencesCopyAppValue(
-        CFSTR("KeyRadius"),
-        CFSTR("com.tutu.keyboardrounded")
-    );
+    NSNumber *value = nil;
 
-    CGFloat radius = 10.0;
-
-    if (value && CFGetTypeID(value) == CFNumberGetTypeID()) {
-        double number = 10.0;
-        CFNumberGetValue(
-            (CFNumberRef)value,
-            kCFNumberDoubleType,
-            &number
+    CFPropertyListRef pref =
+        CFPreferencesCopyAppValue(
+            CFSTR("KeyRadius"),
+            CFSTR("com.tutu.keyboardrounded")
         );
 
-        radius = (CGFloat)number;
+    if (pref && CFGetTypeID(pref) == CFNumberGetTypeID()) {
+        value = [(NSNumber *)pref autorelease];
     }
 
-    if (value) {
-        CFRelease(value);
+    if (!value) {
+        value = @8.0;
     }
 
-    // Giới hạn tuyệt đối 0 - 20
+    CGFloat radius = [value doubleValue];
+
     if (radius < 0.0)
         radius = 0.0;
 
@@ -36,54 +31,128 @@ static CGFloat KRKeyRadius(void) {
     return radius;
 }
 
-#pragma mark - UIKBRenderFactory10Key_Round
+#pragma mark - Keyboard Geometry
 
-@interface UIKBRenderFactory10Key_Round : NSObject
-
-- (double)keyCornerRadius;
-- (BOOL)shouldUseRoundCornerForKey:(id)key;
-- (int)roundCornersForKey:(id)key
-             onKeyplane:(id)keyplane;
-
+@interface UIKBRenderGeometry : NSObject
 @end
 
-%hook UIKBRenderFactory10Key_Round
+#pragma mark - iPhone Keyboard Factory
 
-- (double)keyCornerRadius {
-    return KRKeyRadius();
-}
+@interface UIKBRenderFactoryiPhone : NSObject
+- (id)_traitsForKey:(id)key
+       onKeyplane:(id)keyplane;
+@end
 
-- (BOOL)shouldUseRoundCornerForKey:(id)key {
-    return YES;
-}
+%hook UIKBRenderFactoryiPhone
 
-- (int)roundCornersForKey:(id)key
-             onKeyplane:(id)keyplane {
-    return 0xF;
+- (id)_traitsForKey:(id)key
+       onKeyplane:(id)keyplane
+{
+    id traits = %orig(key, keyplane);
+
+    if (!traits)
+        return traits;
+
+    SEL geometrySelector = @selector(geometry);
+
+    if (![traits respondsToSelector:geometrySelector])
+        return traits;
+
+    id geometry =
+        ((id (*)(id, SEL))objc_msgSend)(
+            traits,
+            geometrySelector
+        );
+
+    if (!geometry)
+        return traits;
+
+    SEL radiusSetter = @selector(setRoundRectRadius:);
+
+    if ([geometry respondsToSelector:radiusSetter]) {
+
+        CGFloat radius = KRKeyRadius();
+
+        ((void (*)(id, SEL, double))objc_msgSend)(
+            geometry,
+            radiusSetter,
+            (double)radius
+        );
+    }
+
+    SEL cornersSetter = @selector(setRoundRectCorners:);
+
+    if ([geometry respondsToSelector:cornersSetter]) {
+
+        ((void (*)(id, SEL, int))objc_msgSend)(
+            geometry,
+            cornersSetter,
+            0xF
+        );
+    }
+
+    return traits;
 }
 
 %end
 
-#pragma mark - UIKBRenderFactory_Monolith
 
-@interface UIKBRenderFactory_Monolith : NSObject
+#pragma mark - iPhone Landscape
 
-- (double)keyRoundRectRadius;
-
-- (void)configureCornersOnGeometry:(id)geometry
-                            forKey:(id)key;
-
+@interface UIKBRenderFactoryiPhoneLandscape : NSObject
+- (id)_traitsForKey:(id)key
+       onKeyplane:(id)keyplane;
 @end
 
-%hook UIKBRenderFactory_Monolith
+%hook UIKBRenderFactoryiPhoneLandscape
 
-- (double)keyRoundRectRadius {
-    return KRKeyRadius();
-}
+- (id)_traitsForKey:(id)key
+       onKeyplane:(id)keyplane
+{
+    id traits = %orig(key, keyplane);
 
-- (void)configureCornersOnGeometry:(id)geometry
-                            forKey:(id)key {
-    %orig(geometry, key);
+    if (!traits)
+        return traits;
+
+    SEL geometrySelector = @selector(geometry);
+
+    if (![traits respondsToSelector:geometrySelector])
+        return traits;
+
+    id geometry =
+        ((id (*)(id, SEL))objc_msgSend)(
+            traits,
+            geometrySelector
+        );
+
+    if (!geometry)
+        return traits;
+
+    SEL radiusSetter = @selector(setRoundRectRadius:);
+
+    if ([geometry respondsToSelector:radiusSetter]) {
+
+        CGFloat radius = KRKeyRadius();
+
+        ((void (*)(id, SEL, double))objc_msgSend)(
+            geometry,
+            radiusSetter,
+            (double)radius
+        );
+    }
+
+    SEL cornersSetter = @selector(setRoundRectCorners:);
+
+    if ([geometry respondsToSelector:cornersSetter]) {
+
+        ((void (*)(id, SEL, int))objc_msgSend)(
+            geometry,
+            cornersSetter,
+            0xF
+        );
+    }
+
+    return traits;
 }
 
 %end
