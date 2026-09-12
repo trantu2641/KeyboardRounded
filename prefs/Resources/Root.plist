@@ -5,39 +5,47 @@
 <plist version="1.0">
 <dict>
 
+    <key>title</key>
+    <string>Keyboard Rounded</string>
+
     <key>PreferenceSpecifiers</key>
     <array>
 
         <dict>
-            <key>Type</key>
-            <string>PSGroupSpecifier</string>
-            <key>Title</key>
+            <key>cell</key>
+            <string>PSGroupCell</string>
+
+            <key>label</key>
             <string>Keyboard Rounded</string>
-            <key>FooterText</key>
-            <string>Điều chỉnh độ bo góc của bàn phím.</string>
+
+            <key>footerText</key>
+            <string>Customize the corner radius of keyboard keys.</string>
         </dict>
 
         <dict>
-            <key>Type</key>
-            <string>PSSliderSpecifier</string>
+            <key>cell</key>
+            <string>PSSliderCell</string>
 
-            <key>Title</key>
-            <string>Key Radius</string>
+            <key>defaults</key>
+            <string>com.tutu.keyboardrounded</string>
 
-            <key>Key</key>
+            <key>key</key>
             <string>KeyRadius</string>
 
-            <key>DefaultValue</key>
+            <key>default</key>
             <real>10.0</real>
 
-            <key>MinimumValue</key>
+            <key>min</key>
             <real>4.0</real>
 
-            <key>MaximumValue</key>
+            <key>max</key>
             <real>16.0</real>
 
+            <key>label</key>
+            <string>Key Radius</string>
+
             <key>PostNotification</key>
-            <string>com.trantu2641.KeyboardRounded.settingsChanged</string>
+            <string>com.tutu.keyboardrounded/settingschanged</string>
         </dict>
 
     </array>
