@@ -1,30 +1,34 @@
 #import <UIKit/UIKit.h>
 #import <objc/message.h>
 
+#pragma mark - Settings
+
 static CGFloat KRKeyRadius(void) {
     return 8.0;
 }
 
-#pragma mark - UIKBRenderGeometry
+#pragma mark - Keyboard Geometry
 
 @interface UIKBRenderGeometry : NSObject
 @property(nonatomic) double roundRectRadius;
 @property(nonatomic) int roundRectCorners;
 @end
 
-#pragma mark - UIKBRenderFactory_Monolith
+#pragma mark - Keyboard Traits
 
-@interface UIKBRenderFactory_Monolith : NSObject
+@interface UIKBRenderTraits : NSObject
+@end
+
+#pragma mark - iPhone Keyboard Factory
+
+@interface UIKBRenderFactoryiPhone : NSObject
 
 - (id)_traitsForKey:(id)key
        onKeyplane:(id)keyplane;
 
-- (id)_variantTraitsForLetterKey:(id)key
-                       onKeyplane:(id)keyplane;
-
 @end
 
-%hook UIKBRenderFactory_Monolith
+%hook UIKBRenderFactoryiPhone
 
 - (id)_traitsForKey:(id)key
        onKeyplane:(id)keyplane
@@ -34,26 +38,44 @@ static CGFloat KRKeyRadius(void) {
     if (!traits)
         return traits;
 
-    if (![traits respondsToSelector:@selector(geometry)])
+    /*
+     * Không gọi [traits geometry].
+     * Lấy geometry bằng objc_msgSend để tránh lỗi
+     * "no known instance method for selector 'geometry'".
+     */
+    SEL geometrySelector = @selector(geometry);
+
+    if (![traits respondsToSelector:geometrySelector])
         return traits;
 
-    id geometry = [traits geometry];
+    id geometry =
+        ((id (*)(id, SEL))objc_msgSend)(
+            traits,
+            geometrySelector
+        );
 
     if (!geometry)
         return traits;
 
-    if ([geometry respondsToSelector:@selector(setRoundRectRadius:)]) {
+    /*
+     * Ép toàn bộ 4 góc của key.
+     */
+    SEL radiusSetter = @selector(setRoundRectRadius:);
+
+    if ([geometry respondsToSelector:radiusSetter]) {
         ((void (*)(id, SEL, double))objc_msgSend)(
             geometry,
-            @selector(setRoundRectRadius:),
-            KRKeyRadius()
+            radiusSetter,
+            (double)KRKeyRadius()
         );
     }
 
-    if ([geometry respondsToSelector:@selector(setRoundRectCorners:)]) {
+    SEL cornersSetter = @selector(setRoundRectCorners:);
+
+    if ([geometry respondsToSelector:cornersSetter]) {
         ((void (*)(id, SEL, int))objc_msgSend)(
             geometry,
-            @selector(setRoundRectCorners:),
+            cornersSetter,
             0xF
         );
     }
@@ -61,34 +83,58 @@ static CGFloat KRKeyRadius(void) {
     return traits;
 }
 
-- (id)_variantTraitsForLetterKey:(id)key
-                       onKeyplane:(id)keyplane
+%end
+
+
+#pragma mark - iPhone Landscape
+
+@interface UIKBRenderFactoryiPhoneLandscape : NSObject
+
+- (id)_traitsForKey:(id)key
+       onKeyplane:(id)keyplane;
+
+@end
+
+%hook UIKBRenderFactoryiPhoneLandscape
+
+- (id)_traitsForKey:(id)key
+       onKeyplane:(id)keyplane
 {
     id traits = %orig(key, keyplane);
 
     if (!traits)
         return traits;
 
-    if (![traits respondsToSelector:@selector(geometry)])
+    SEL geometrySelector = @selector(geometry);
+
+    if (![traits respondsToSelector:geometrySelector])
         return traits;
 
-    id geometry = [traits geometry];
+    id geometry =
+        ((id (*)(id, SEL))objc_msgSend)(
+            traits,
+            geometrySelector
+        );
 
     if (!geometry)
         return traits;
 
-    if ([geometry respondsToSelector:@selector(setRoundRectRadius:)]) {
+    SEL radiusSetter = @selector(setRoundRectRadius:);
+
+    if ([geometry respondsToSelector:radiusSetter]) {
         ((void (*)(id, SEL, double))objc_msgSend)(
             geometry,
-            @selector(setRoundRectRadius:),
-            KRKeyRadius()
+            radiusSetter,
+            (double)KRKeyRadius()
         );
     }
 
-    if ([geometry respondsToSelector:@selector(setRoundRectCorners:)]) {
+    SEL cornersSetter = @selector(setRoundRectCorners:);
+
+    if ([geometry respondsToSelector:cornersSetter]) {
         ((void (*)(id, SEL, int))objc_msgSend)(
             geometry,
-            @selector(setRoundRectCorners:),
+            cornersSetter,
             0xF
         );
     }
