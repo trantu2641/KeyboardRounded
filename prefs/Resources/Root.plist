@@ -3,18 +3,16 @@
         {
             Type = PSGroupSpecifier;
             Label = "Keyboard Rounded";
-            FooterText = "Nhập độ bo góc của phím từ 0 đến 20.";
+            FooterText = "Nhập độ bo góc từ 0 đến 20.";
         },
         {
             Type = PSEditTextSpecifier;
             Title = "Key Radius";
             Key = KeyRadius;
-            DefaultValue = 10;
-            KeyboardType = 4;
+            DefaultValue = 8;
             Defaults = "com.tutu.keyboardrounded";
-            IsSecure = NO;
+            KeyboardType = 4;
         }
     );
-
     Title = "Keyboard Rounded";
 }
